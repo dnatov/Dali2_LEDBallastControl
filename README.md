@@ -4,6 +4,18 @@ This repository contains code for operating an **Inventronics LED Ballast (ESUM-
 
 ---
 
+## 🧩 Library Usage
+
+1. Create a timer that runs at about 1/4 the DALI bus speed of 416µs (~104µs)
+2. Create DALI2 Object and initialize the RX, TX and Delay function pointers.
+2. Call DALI_Init() to initialize the bus.
+3. Put mDoWorkInMainLoop() call in your main loop to run the state machine.
+4. Put the DALI mDoWorkTimerInterrupt() call in your timer interrupt.
+5. Run DALI Send Commands.
+6. Receive DALI data by running DALI_Get_Ballast_Answer() // TODO: Change Data Receive calls to be more useful
+
+---
+
 ## 🧰 Hardware Used
 
 - **Inventronics CPR30+** – for NFC programming  

@@ -446,31 +446,31 @@ namespace Carendes
             }
         }
 
-        // void Dali2Bus::mStartTimer()
-        // {
-        //     if (_isNotStartedTimer)
-        //     {
-        //         HAL_TIM_Base_Start_IT(&htim2);
-        //     }
-        //
-        //     //reset tick and bit counters
-        //     tick_count = 0;
-        //     bit_count = 0;
-        //     _isNotStartedTimer = false;
-        // }
-        //
-        // void Dali2Bus::mStopTimer()
-        // {
-        //     if (!_isNotStartedTimer)
-        //     {
-        //         HAL_TIM_Base_Stop_IT(&htim2);
-        //     }
-        //
-        //     //reset tick and bit counters
-        //     tick_count = 0;
-        //     bit_count = 0;
-        //     _isNotStartedTimer = true;
-        // }
+        void Dali2Bus::mStartTimer()
+        {
+            // if (_isNotStartedTimer)
+            // {
+            //     HAL_TIM_Base_Start_IT(&htim2);
+            // }
+            //
+            //reset tick and bit counters
+            tick_count = 0;
+            bit_count = 0;
+            _isNotStartedTimer = false;
+        }
+
+        void Dali2Bus::mStopTimer()
+        {
+            // if (!_isNotStartedTimer)
+            // {
+            //     HAL_TIM_Base_Stop_IT(&htim2);
+            // }
+
+            //reset tick and bit counters
+            tick_count = 0;
+            bit_count = 0;
+            _isNotStartedTimer = true;
+        }
 
         // Finalizes the end of the return data and resets the State Machine
         uint8_t Dali2Bus::finishTransfer()
