@@ -120,7 +120,7 @@ For multi-byte reads, repeatedly read the diagnostic bank to retrieve less signi
 
 | Parameter | Offset | Size | Units | Notes |
 |------------|---------|------|--------|--------|
-| Output Power | `0x0C` | 4 bytes | 0.1 W | Requires `0xC3CC → 0xA30B → 0x01C5`; may return 1 byte |
+| Output Power | `0x0C` | 4 bytes | 0.1 W | May Require Doing This Before -> `0xC3CC → 0xA30B → 0x01C5` -> which returns 1 byte |
 
 ---
 
