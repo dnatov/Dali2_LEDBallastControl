@@ -104,15 +104,15 @@ For multi-byte reads, repeatedly read the diagnostic bank to retrieve less signi
 
 | Parameter | Offset | Size | Units | Notes |
 |------------|---------|------|--------|--------|
-| Output Power (Active) | `0x0C` | 4 bytes | 0.1 W | Requires `0xC3CA → 0xA30B → 0x01C3`; may return 1 byte |
+| Output Power (Active) | `0x0C` | 4 bytes | 0.1 W | May Require Doing This Before -> `0xC3CA → 0xA30B → 0x01C3` -> which returns 1 byte |
 
 ---
 
 ### 🧾 Diagnostic Bank 2 (`0xCB`)
 
-| Parameter | Offset | Size | Units | Notes |
-|------------|---------|------|--------|--------|
-| Output Power (Reactive) | `0x0C` | 4 bytes | 0.1 VA | Requires `0xC3CB → 0xA30B → 0x01C5`; may return 1 byte |
+| Parameter | Offset | Size | Units | Notes                                                                               |
+|------------|---------|------|--------|-------------------------------------------------------------------------------------|
+| Output Power (Reactive) | `0x0C` | 4 bytes | 0.1 VA | May Require Doing This Before -> `0xC3CB → 0xA30B → 0x01C5` -> which returns 1 byte |
 
 ---
 

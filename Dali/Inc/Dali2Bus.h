@@ -4,9 +4,8 @@
 
 #pragma once
 
-#include "ESUM-230S500BG-Defs.h"
-#include "LLE_IOPIN.h"
-
+#include <cstdint>
+#include <functional>
 #pragma once
 
 namespace Carendes::Dali
@@ -24,6 +23,7 @@ namespace Carendes::Dali
     class Dali2Bus
     {
     private:
+        using DelayMsFn = void(*)(uint32_t);
         bool _isInitialized = false;
         volatile bool _isNotStartedTimer = true;
         volatile unsigned int tick_count = 0;
@@ -36,8 +36,10 @@ namespace Carendes::Dali
 
         volatile unsigned char expect_backchannel = false;
         volatile unsigned char expected_response = false;
-        LowLevelEmbedded::IOPIN* pDaliTxPin;
-        LowLevelEmbedded::IOPIN* pDaliRxPin;
+        std::function<void()> _txSet;
+        std::function<void()> _txClear;
+        std::function<bool()> _rxRead;
+        DelayMsFn _delayMs = nullptr;
         uint8_t finishTransfer();
         void DALI_Init();
         void Timer_DALI_Init();
@@ -54,11 +56,15 @@ namespace Carendes::Dali
         unsigned char DALI_Master_Status();
     protected:
     public:
-        Dali2Bus(LowLevelEmbedded::IOPIN* txPin, LowLevelEmbedded::IOPIN* rxPin)
+        Dali2Bus(std::function<void()> txSet,
+                 std::function<void()> txClear,
+                 std::function<bool()> rxRead,
+                 DelayMsFn delayMs)
+        : _txSet(std::move(txSet)),
+          _txClear(std::move(txClear)),
+          _rxRead(std::move(rxRead)),
+          _delayMs(delayMs)
         {
-            pDaliTxPin = txPin;
-            pDaliRxPin = rxPin;
-
             DALI_Init();
         }
 

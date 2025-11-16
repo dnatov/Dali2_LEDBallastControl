@@ -23,9 +23,6 @@ endforeach()
 list(REMOVE_DUPLICATES LIB_INCLUDE_DIRS)
 
 include(cpm/CPM.cmake)
-CPMAddPackage("gh:JeroenVandezande/LowLevelCPPClasses#5c75a6b03579d81684d6aced572e0a82886b03cf")
-
-target_compile_definitions(LowLevelEmbedded PUBLIC LOWLEVELCPPCLASSES_DISABLE_EXCEPTIONS)
 
 target_link_libraries(${PROJECT_NAME} PUBLIC microlog LowLevelEmbedded)
 

@@ -4,7 +4,7 @@
 
 #include "Dali-defs.h"
 #include "Dali2Bus.h"
-#include "Delay.h"
+#include "ESUM-230S500BG-Defs.h"
 
 namespace Carendes
 {
@@ -21,8 +21,7 @@ namespace Carendes
 
         void Dali2Bus::Timer_DALI_Init()
         {
-            //pDaliRxPin->Set();
-            pDaliTxPin->Clear();
+            _txClear();
 
             _isNotStartedTimer = true;
 
@@ -37,7 +36,7 @@ namespace Carendes
             unsigned char i;
 
             //set output pin to 0
-            pDaliTxPin->Clear();
+            _txClear();
 
             tick_count = 0;
             bit_count  = 0;
@@ -129,10 +128,8 @@ namespace Carendes
 
             if(tick_count == (bit_count * 8 + 2))
             {
-                if(pDaliRxPin->GetValue() == 0)
-                    dali_array_receive_buffer[bit_count] = 0;
-                else
-                    dali_array_receive_buffer[bit_count] = 1;
+                dali_array_receive_buffer[bit_count] =
+                _rxRead() ? 1 : 0;
             }
 
             //increment ticks
@@ -157,9 +154,9 @@ namespace Carendes
             if(tick_count < 8)
             {
                 if(tick_count < 4)
-                    pDaliTxPin->Set();
+                    _txSet();
                 else
-                    pDaliTxPin->Clear();
+                    _txClear();
             }
             else
                 if(bit_count < 17)
@@ -170,16 +167,16 @@ namespace Carendes
                         if(pulsePosition % 2 == 0)
                         {
                             if(dali_array_cmd[bit_count] == DALI_START_BIT_PULSE)
-                                pDaliTxPin->Clear();
+                                _txClear();
                             else
-                                pDaliTxPin->Set();
+                                _txSet();
                         }
                         else
                         {
                             if(dali_array_cmd[bit_count] == DALI_START_BIT_PULSE)
-                                pDaliTxPin->Set();
+                                _txSet();
                             else
-                                pDaliTxPin->Clear();
+                                _txClear();
                         }
                     }
                 }
@@ -191,7 +188,7 @@ namespace Carendes
             if(bit_count > 16)
             {
                 dali_state = FORWARD_FRAME_SENT;
-                pDaliTxPin->Clear();
+                _txClear();
             }
         }
 
@@ -335,13 +332,13 @@ namespace Carendes
                 bit_count  = 0;
 
                 // Set TX pin to idle state
-                pDaliTxPin->Clear();
+                _txClear();
 
                 // Set settling time and prepare for backchannel if expected
                 if(expect_backchannel == TRUE)
                 {
                     // A small delay to allow slave device to prepare
-                    LowLevelEmbedded::Utility::Delay_ms(1);
+                    if (_delayMs) { _delayMs(1); }
                     mStartTimer();
                     dali_state = WAIT_FOR_BACKCHANNEL_TO_RECEIVE;
                 }
@@ -349,7 +346,7 @@ namespace Carendes
                 {
                     // No backchannel expected, go to settling state
                     dali_state = SETTLING_FF_TO_FF;
-                    LowLevelEmbedded::Utility::Delay_ms(10);
+                    if (_delayMs) { _delayMs(10); }
                     // Could add a timer to transition to NO_ACTION after settling time
                     // For now, just transition directly
                     dali_state = NO_ACTION;
@@ -365,7 +362,7 @@ namespace Carendes
             else if(dali_state == ERR)
             {
                 // Error handling - reset pins
-                pDaliTxPin->Clear();
+                _txClear();
                 dali_state = NO_ACTION;
             }
 
@@ -435,7 +432,7 @@ namespace Carendes
                     else
                     {
                         // Check if there is a difference in RX line
-                        if(pDaliRxPin->GetValue())
+                        if(_rxRead())
                         {
                             // Edge detected - set state to RECEIVING
                             dali_state = RECEIVING_DATA;
