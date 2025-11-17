@@ -10,97 +10,26 @@ namespace Carendes
 {
     namespace Dali
     {
-        void Dali2Bus::DALI_Init()
+        void Dali2Bus::init()
         {
             // Default dali state flags
-            dali_state = NO_ACTION;
+            _dali_state = NO_ACTION;
 
             // Default Timer Settings
-            Timer_DALI_Init();
+            timer_Init();
         }
 
-        void Dali2Bus::Timer_DALI_Init()
+        void Dali2Bus::timer_Init()
         {
             _txClear();
 
             _isNotStartedTimer = true;
 
-            tick_count = 0;
-            bit_count  = 0;
+            _tick_count = 0;
+            _bit_count  = 0;
         }
 
-        unsigned char Dali2Bus::DALI_Send_Cmd(unsigned char ballastAddr, unsigned char cmd,
-                                                unsigned char typeOfCmd, unsigned char followingType)
-        {
-            unsigned char data_array[2];
-            unsigned char i;
-
-            //set output pin to 0
-            _txClear();
-
-            tick_count = 0;
-            bit_count  = 0;
-
-            //set DALI state to send data
-            dali_state = SENDING_DATA;
-
-            //fetch ballast address and command
-            data_array[0] = (char)ballastAddr;
-            data_array[1] = (char)cmd;
-
-            //reset dali_array_cmd values
-            for (i = 0; i < 17; i++)         //16
-                dali_array_cmd[i] = 0;
-
-            //prepare address byte to be sent
-            PrepareAddressByte(data_array, typeOfCmd, 0, followingType);
-
-            //encode data - Manchester encoding
-            PrepareDataToSend(data_array, dali_array_cmd, 2);
-
-            //check type of command
-            //set backchannel
-            if((cmd >= 0x00) && (cmd <= 0x1F)) //Indirect arc power control commands
-            {
-                expect_backchannel   = FALSE;
-            }
-            if((cmd >= 20) && (cmd <= 0x80)) //Configurations commands
-            {
-                expect_backchannel = FALSE;
-            }
-            if((cmd >= 0x90))                //Query commands
-            {
-                expect_backchannel = TRUE;     //set status to expect Backchannel. Posible answer:
-                //1111 1111                             - YES
-                //no response; no ba1ckchannel received  - NO
-                //8bit info                             - 8 bit
-            }
-            if (data_array[0] == DTR || data_array[0] == REG_DTR1)
-            {
-                expect_backchannel = FALSE;
-            }
-            //check for special command
-            if(DALI_Check_Special_Cmd(data_array[0]))
-            {
-                expect_backchannel = TRUE;
-                //
-                if(data_array[0] == TERMINATE_H_BITS || data_array[0] == DTR || data_array[0] == REG_DTR1)
-                    expect_backchannel = FALSE;
-                else if(data_array[0] == VERIFY_SHORT_ADDRESS || data_array[0] == QUERY_SHORT_ADDRESS_H)
-                    expect_backchannel = TRUE;
-                else
-                    expect_backchannel = FALSE;
-
-
-            }
-
-            //start timer
-            mStartTimer();
-
-            return TRUE;
-        }
-
-        unsigned char Dali2Bus::DALI_Check_Special_Cmd(unsigned char addrByte)
+        unsigned char Dali2Bus::check_Special_Cmd(unsigned char addrByte)
         {
             volatile unsigned char addrToCheck;
 
@@ -118,7 +47,7 @@ namespace Carendes
             }
         }
 
-        void Dali2Bus::DALI_Receiving_Data()
+        void Dali2Bus::receiving_Data()
         {
             unsigned char pulsePosition;
             //backward frame - 9 bits to receive - last 2 don't change phase
@@ -126,73 +55,73 @@ namespace Carendes
             //FF - BF settlling time 7Te - 22Te (2Te = 8 interrupt intervals)
             //when change on pin is detected, tick_count is restarted.
 
-            if(tick_count == (bit_count * 8 + 2))
+            if(_tick_count == (_bit_count * 8 + 2))
             {
-                dali_array_receive_buffer[bit_count] =
+                _dali_array_receive_buffer[_bit_count] =
                 _rxRead() ? 1 : 0;
             }
 
             //increment ticks
-            tick_count++;
+            _tick_count++;
 
-            if((tick_count + 1) % 8 == 0)
+            if((_tick_count + 1) % 8 == 0)
             {
-                bit_count++;
+                _bit_count++;
             }
             //transfer completed
-            if(bit_count > 8)
+            if(_bit_count > 8)
             {
                 //set dali state
-                dali_state = BACKWARD_FRAME_RECEIVED;
+                _dali_state = BACKWARD_FRAME_RECEIVED;
             }
         }
 
-        void Dali2Bus::DALI_Sending_Data()
+        void Dali2Bus::sending_Data()
         {
             unsigned char pulsePosition;
 
-            if(tick_count < 8)
+            if(_tick_count < 8)
             {
-                if(tick_count < 4)
+                if(_tick_count < 4)
                     _txSet();
                 else
                     _txClear();
             }
             else
-                if(bit_count < 17)
+                if(_bit_count < 17)
                 {
-                    if(tick_count % 4 == 0)
+                    if(_tick_count % 4 == 0)
                     {
-                        pulsePosition = tick_count / 4;
+                        pulsePosition = _tick_count / 4;
                         if(pulsePosition % 2 == 0)
                         {
-                            if(dali_array_cmd[bit_count] == DALI_START_BIT_PULSE)
+                            if(_dali_array_cmd[_bit_count] == DALI_START_BIT_PULSE)
                                 _txClear();
                             else
                                 _txSet();
                         }
                         else
                         {
-                            if(dali_array_cmd[bit_count] == DALI_START_BIT_PULSE)
+                            if(_dali_array_cmd[_bit_count] == DALI_START_BIT_PULSE)
                                 _txSet();
                             else
                                 _txClear();
                         }
                     }
                 }
-            tick_count++;
+            _tick_count++;
 
-            if(tick_count % 8 == 0)
-                bit_count++;
+            if(_tick_count % 8 == 0)
+                _bit_count++;
 
-            if(bit_count > 16)
+            if(_bit_count > 16)
             {
-                dali_state = FORWARD_FRAME_SENT;
+                _dali_state = FORWARD_FRAME_SENT;
                 _txClear();
             }
         }
 
-        void Dali2Bus::PrepareDataToSend(unsigned char *commandArray, volatile unsigned char *tx_array,
+        void Dali2Bus::prepareDataToSend(unsigned char *commandArray, volatile unsigned char *tx_array,
             unsigned char bytesInCmd)
         {
             //set default value for the mask
@@ -260,8 +189,8 @@ namespace Carendes
               }*/
         }
 
-        void Dali2Bus::PrepareAddressByte(unsigned char *commandArray, unsigned char addressType,
-            unsigned char byteAddressPosition, unsigned char followingType)
+        void Dali2Bus::prepareAddressByte(unsigned char *commandArray, unsigned char addressType,
+            unsigned char byteAddressPosition, bool setDirectArcCommand = false)
         {
             unsigned char addr_tmp;
             //broadcast command to all ballasts
@@ -288,7 +217,7 @@ namespace Carendes
                     addr_tmp <<= 1;
 
                     //check if the command byte is following address byte
-                    if(followingType == FOLLOWING_COMMAND)
+                    if(setDirectArcCommand)
                         //set LSB
                             addr_tmp |= 0x01;
                     //if it is a group address
@@ -301,7 +230,7 @@ namespace Carendes
             }
         }
 
-        unsigned char Dali2Bus::DALI_Get_Ballast_Answer()
+        unsigned char Dali2Bus::FetchDaliData()
         {
             unsigned char i;
             unsigned char receivedData = 0x00;
@@ -309,9 +238,13 @@ namespace Carendes
             for (i = 0; i < 8; i++)
             {
                 // Shift the bit to the correct position and OR it with result
-                receivedData |= (dali_array_receive_buffer[i+1] << (7-i));
+                receivedData |= (_dali_array_receive_buffer[i+1] << (7-i));
 
             }
+            // Reset state
+            _dali_state = NO_ACTION;
+            _expect_backchannel = FALSE;
+
             //return received byte
             return receivedData;
         }
@@ -320,53 +253,53 @@ namespace Carendes
         {
             unsigned char i;
 
-            if(dali_state == NO_ACTION)
+            if(_dali_state == NO_ACTION)
             {
                 // Idle state - reset variables
-                tick_count = 0;
-                bit_count  = 0;
+                _tick_count = 0;
+                _bit_count  = 0;
             }
-            else if(dali_state == FORWARD_FRAME_SENT)
+            else if(_dali_state == FORWARD_FRAME_SENT)
             {
-                tick_count = 0;
-                bit_count  = 0;
+                _tick_count = 0;
+                _bit_count  = 0;
 
                 // Set TX pin to idle state
                 _txClear();
 
                 // Set settling time and prepare for backchannel if expected
-                if(expect_backchannel == TRUE)
+                if(_expect_backchannel == TRUE)
                 {
                     // A small delay to allow slave device to prepare
                     if (_delayMs) { _delayMs(1); }
                     mStartTimer();
-                    dali_state = WAIT_FOR_BACKCHANNEL_TO_RECEIVE;
+                    _dali_state = WAIT_FOR_BACKCHANNEL_TO_RECEIVE;
                 }
                 else
                 {
                     // No backchannel expected, go to settling state
-                    dali_state = SETTLING_FF_TO_FF;
+                    _dali_state = SETTLING_FF_TO_FF;
                     if (_delayMs) { _delayMs(10); }
                     // Could add a timer to transition to NO_ACTION after settling time
                     // For now, just transition directly
-                    dali_state = NO_ACTION;
+                    _dali_state = NO_ACTION;
                 }
             }
-            else if(dali_state == BACKWARD_FRAME_RECEIVED)
+            else if(_dali_state == BACKWARD_FRAME_RECEIVED)
             {
                 // Process the received data if needed
 
                 // Then transition to idle state
-                expect_backchannel = FALSE;
+                _expect_backchannel = FALSE;
             }
-            else if(dali_state == ERR)
+            else if(_dali_state == ERR)
             {
                 // Error handling - reset pins
                 _txClear();
-                dali_state = NO_ACTION;
+                _dali_state = NO_ACTION;
             }
 
-            return dali_state;
+            return _dali_state;
         }
 
         void Dali2Bus::mDoWorkInMainLoop()
@@ -375,8 +308,8 @@ namespace Carendes
             {
                 _isInitialized = true;
                 // HAL_Delay(110);
-                DALI_Send_Cmd(ENABLE_LED_MODULES_H, 0x06, ENABLE_LED_MODULES_H, FOLLOWING_COMMAND); // Enable LED Modules DT6
-                DALI_Send_Cmd(BROADCAST_CMD, 0xEE, BROADCAST_CMD, FOLLOWING_COMMAND); // Enable all modules
+                Send_Cmd(ENABLE_LED_MODULES_H, 0x06, ENABLE_LED_MODULES_H, true); // Enable LED Modules DT6
+                Send_Cmd(BROADCAST_CMD, 0xEE, BROADCAST_CMD, true); // Enable all modules
                 // //     // Send broadcast command to all ballasts
                 // //     //DALI_Send_Cmd(ADDRESS01, OFF, BROADCAST_CMD, FOLLOWING_COMMAND);
                 // //     //HAL_Delay(1500);
@@ -397,7 +330,7 @@ namespace Carendes
 
 
             //get DALI status - master
-            dali_state = DALI_Master_Status();
+            _dali_state = DALI_Master_Status();
         }
 
         void Dali2Bus::mDoWorkTimerInterrupt()
@@ -405,29 +338,29 @@ namespace Carendes
             unsigned char i;
 
             // If dali state is not idle
-            if(dali_state != NO_ACTION)
+            if(_dali_state != NO_ACTION)
             {
                 // Check if data is sending
-                if(dali_state == SENDING_DATA)
+                if(_dali_state == SENDING_DATA)
                 {
                     // Send data to slave device
-                    DALI_Sending_Data();
+                    sending_Data();
                 }
                 // Receiving state - receiving backward frame
-                else if(dali_state == RECEIVING_DATA)
+                else if(_dali_state == RECEIVING_DATA)
                 {
                     // Check and receive data from RX line
-                    DALI_Receiving_Data();
+                    receiving_Data();
                 }
-                else if(dali_state == WAIT_FOR_BACKCHANNEL_TO_RECEIVE)
+                else if(_dali_state == WAIT_FOR_BACKCHANNEL_TO_RECEIVE)
                 {
-                    if(tick_count > 200) // Timeout -> max wait time ~9.2ms
+                    if(_tick_count > 200) // Timeout -> max wait time ~9.2ms
                     {
                         // No response -> answer 'NO'
-                        dali_state = ERR;
+                        _dali_state = ERR;
                         // There wasn't response from slave device... answer is 'NO'
                         for(i = 0; i < 8; i++)
-                            dali_array_receive_buffer[i] = 0;
+                            _dali_array_receive_buffer[i] = 0;
                     }
                     else
                     {
@@ -435,13 +368,13 @@ namespace Carendes
                         if(_rxRead())
                         {
                             // Edge detected - set state to RECEIVING
-                            dali_state = RECEIVING_DATA;
-                            tick_count = 0;
-                            bit_count  = 0; // Reset for start bit
+                            _dali_state = RECEIVING_DATA;
+                            _tick_count = 0;
+                            _bit_count  = 0; // Reset for start bit
                         }
                     }
 
-                    tick_count++;
+                    _tick_count++;
                 }
             }
         }
@@ -454,8 +387,8 @@ namespace Carendes
             // }
             //
             //reset tick and bit counters
-            tick_count = 0;
-            bit_count = 0;
+            _tick_count = 0;
+            _bit_count = 0;
             _isNotStartedTimer = false;
         }
 
@@ -467,21 +400,80 @@ namespace Carendes
             // }
 
             //reset tick and bit counters
-            tick_count = 0;
-            bit_count = 0;
+            _tick_count = 0;
+            _bit_count = 0;
             _isNotStartedTimer = true;
         }
 
-        // Finalizes the end of the return data and resets the State Machine
-        uint8_t Dali2Bus::finishTransfer()
+        unsigned char Dali2Bus::Send_Cmd(unsigned char ballastAddr, unsigned char cmd,
+                                                unsigned char typeOfCmd, bool setDirectArcCommand = false)
         {
-            // Get the received temperature value
-            unsigned char temperature = DALI_Get_Ballast_Answer();
+            unsigned char data_array[2];
+            unsigned char i;
 
-            // Reset state
-            dali_state = NO_ACTION;
-            expect_backchannel = FALSE;
-            return temperature;
+            //set output pin to 0
+            _txClear();
+
+            _tick_count = 0;
+            _bit_count  = 0;
+
+            //set DALI state to send data
+            _dali_state = SENDING_DATA;
+
+            //fetch ballast address and command
+            data_array[0] = (char)ballastAddr;
+            data_array[1] = (char)cmd;
+
+            //reset dali_array_cmd values
+            for (i = 0; i < 17; i++)         //16
+                _dali_array_cmd[i] = 0;
+
+            //prepare address byte to be sent
+            prepareAddressByte(data_array, typeOfCmd, 0, setDirectArcCommand);
+
+            //encode data - Manchester encoding
+            prepareDataToSend(data_array, _dali_array_cmd, 2);
+
+            //check type of command
+            //set backchannel
+            if((cmd >= 0x00) && (cmd <= 0x1F)) //Indirect arc power control commands
+            {
+                _expect_backchannel   = FALSE;
+            }
+            if((cmd >= 20) && (cmd <= 0x80)) //Configurations commands
+            {
+                _expect_backchannel = FALSE;
+            }
+            if((cmd >= 0x90))                //Query commands
+            {
+                _expect_backchannel = TRUE;     //set status to expect Backchannel. Posible answer:
+                //1111 1111                             - YES
+                //no response; no ba1ckchannel received  - NO
+                //8bit info                             - 8 bit
+            }
+            if (data_array[0] == DTR || data_array[0] == REG_DTR1)
+            {
+                _expect_backchannel = FALSE;
+            }
+            //check for special command
+            if(check_Special_Cmd(data_array[0]))
+            {
+                _expect_backchannel = TRUE;
+                //
+                if(data_array[0] == TERMINATE_H_BITS || data_array[0] == DTR || data_array[0] == REG_DTR1)
+                    _expect_backchannel = FALSE;
+                else if(data_array[0] == VERIFY_SHORT_ADDRESS || data_array[0] == QUERY_SHORT_ADDRESS_H)
+                    _expect_backchannel = TRUE;
+                else
+                    _expect_backchannel = FALSE;
+
+
+            }
+
+            //start timer
+            mStartTimer();
+
+            return TRUE;
         }
     }
 }

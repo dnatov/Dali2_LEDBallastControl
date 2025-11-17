@@ -26,33 +26,30 @@ namespace Carendes::Dali
         using DelayMsFn = void(*)(uint32_t);
         bool _isInitialized = false;
         volatile bool _isNotStartedTimer = true;
-        volatile unsigned int tick_count = 0;
-        volatile unsigned char bit_count = 0;
+        volatile unsigned int _tick_count = 0;
+        volatile unsigned char _bit_count = 0;
 
-        volatile unsigned char dali_state = NO_ACTION;
+        volatile unsigned char _dali_state = NO_ACTION;
 
-        volatile unsigned char dali_array_cmd[17] = {};
-        volatile unsigned char dali_array_receive_buffer[9] = {};
+        volatile unsigned char _dali_array_cmd[17] = {};
+        volatile unsigned char _dali_array_receive_buffer[9] = {};
 
-        volatile unsigned char expect_backchannel = false;
-        volatile unsigned char expected_response = false;
+        volatile unsigned char _expect_backchannel = false;
+        volatile unsigned char _expected_response = false;
         std::function<void()> _txSet;
         std::function<void()> _txClear;
         std::function<bool()> _rxRead;
         DelayMsFn _delayMs = nullptr;
         uint8_t finishTransfer();
-        void DALI_Init();
-        void Timer_DALI_Init();
-        unsigned char DALI_Send_Cmd(unsigned char ballastAddr, unsigned char cmd,
-                                    unsigned char typeOfCmd, unsigned char followingType);
-        unsigned char DALI_Check_Special_Cmd(unsigned char addrByte);
-        void DALI_Receiving_Data();
-        void DALI_Sending_Data();
-        void PrepareDataToSend(unsigned char *commandArray, volatile unsigned char *tx_array,
+        void init();
+        void timer_Init();
+        unsigned char check_Special_Cmd(unsigned char addrByte);
+        void receiving_Data();
+        void sending_Data();
+        void prepareDataToSend(unsigned char *commandArray, volatile unsigned char *tx_array,
                               unsigned char bytesInCmd);
-        void PrepareAddressByte(unsigned char *commandArray, unsigned char addressType,
-                               unsigned char byteAddressPosition, unsigned char followingType);
-        unsigned char DALI_Get_Ballast_Answer();
+        void prepareAddressByte(unsigned char *commandArray, unsigned char addressType,
+                               unsigned char byteAddressPosition, bool setDirectArcCommand);
         unsigned char DALI_Master_Status();
     protected:
     public:
@@ -65,15 +62,13 @@ namespace Carendes::Dali
           _rxRead(std::move(rxRead)),
           _delayMs(delayMs)
         {
-            DALI_Init();
+            init();
         }
 
         void StartDataQuery(uint8_t address, uint8_t requestedData);
         void StartDiagnosticDataQuery(uint8_t address, uint8_t requestedData);
 
-        uint32_t FetchDaliData32(uint8_t data);
-        uint16_t FetchDaliData16(uint8_t data);
-        uint8_t FetchDaliData8(uint8_t data);
+        unsigned char FetchDaliData();
 
         // Stick this in your main loop to process the Dali State Machine
         void mDoWorkInMainLoop();
@@ -87,5 +82,8 @@ namespace Carendes::Dali
 
         // Stop STM32 Timer
         virtual void mStopTimer() = 0;
+
+        unsigned char Send_Cmd(unsigned char ballastAddr, unsigned char cmd,
+                                    unsigned char typeOfCmd, bool setDirectArcCommand);
     };
 }
