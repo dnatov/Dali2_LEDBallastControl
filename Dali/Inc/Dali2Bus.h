@@ -5,6 +5,7 @@
 
 #include <cstdint>
 #include <functional>
+#include "Dali-defs.h"
 #include "LLE_IOPIN.h"
 
 namespace Carendes::Dali
