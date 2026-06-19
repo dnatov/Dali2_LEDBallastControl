@@ -1,12 +1,11 @@
 //
 // Created by danan on 2025-11-11.
 //
-
 #pragma once
 
 #include <cstdint>
 #include <functional>
-#pragma once
+#include "LLE_IOPIN.h"
 
 namespace Carendes::Dali
 {
@@ -36,9 +35,8 @@ namespace Carendes::Dali
 
         volatile unsigned char _expect_backchannel = false;
         volatile unsigned char _expected_response = false;
-        std::function<void()> _txSet;
-        std::function<void()> _txClear;
-        std::function<bool()> _rxRead;
+        LowLevelEmbedded::IOPIN* _txPin;
+        LowLevelEmbedded::IOPIN* _rxPin;
         DelayMsFn _delayMs = nullptr;
         uint8_t finishTransfer();
         void init();
@@ -53,13 +51,11 @@ namespace Carendes::Dali
         unsigned char DALI_Master_Status();
     protected:
     public:
-        Dali2Bus(std::function<void()> txSet,
-                 std::function<void()> txClear,
-                 std::function<bool()> rxRead,
+        Dali2Bus(LowLevelEmbedded::IOPIN* txPin,
+                 LowLevelEmbedded::IOPIN* rxPin,
                  DelayMsFn delayMs)
-        : _txSet(std::move(txSet)),
-          _txClear(std::move(txClear)),
-          _rxRead(std::move(rxRead)),
+        : _txPin(txPin),
+          _rxPin(rxPin),
           _delayMs(delayMs)
         {
             init();

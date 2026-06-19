@@ -21,7 +21,7 @@ namespace Carendes
 
         void Dali2Bus::timer_Init()
         {
-            _txClear();
+            _txPin->Clear();
 
             _isNotStartedTimer = true;
 
@@ -57,8 +57,7 @@ namespace Carendes
 
             if(_tick_count == (_bit_count * 8 + 2))
             {
-                _dali_array_receive_buffer[_bit_count] =
-                _rxRead() ? 1 : 0;
+                _dali_array_receive_buffer[_bit_count] = _rxPin->GetValue();
             }
 
             //increment ticks
@@ -83,9 +82,9 @@ namespace Carendes
             if(_tick_count < 8)
             {
                 if(_tick_count < 4)
-                    _txSet();
+                    _txPin->Set();
                 else
-                    _txClear();
+                    _txPin->Clear();
             }
             else
                 if(_bit_count < 17)
@@ -96,16 +95,16 @@ namespace Carendes
                         if(pulsePosition % 2 == 0)
                         {
                             if(_dali_array_cmd[_bit_count] == DALI_START_BIT_PULSE)
-                                _txClear();
+                                _txPin->Set();
                             else
-                                _txSet();
+                                _txPin->Clear();
                         }
                         else
                         {
                             if(_dali_array_cmd[_bit_count] == DALI_START_BIT_PULSE)
-                                _txSet();
+                                _txPin->Set();
                             else
-                                _txClear();
+                                _txPin->Clear();
                         }
                     }
                 }
@@ -117,7 +116,7 @@ namespace Carendes
             if(_bit_count > 16)
             {
                 _dali_state = FORWARD_FRAME_SENT;
-                _txClear();
+                _txPin->Clear();
             }
         }
 
@@ -265,7 +264,7 @@ namespace Carendes
                 _bit_count  = 0;
 
                 // Set TX pin to idle state
-                _txClear();
+                _txPin->Clear();
 
                 // Set settling time and prepare for backchannel if expected
                 if(_expect_backchannel == TRUE)
@@ -295,7 +294,7 @@ namespace Carendes
             else if(_dali_state == ERR)
             {
                 // Error handling - reset pins
-                _txClear();
+                _txPin->Clear();
                 _dali_state = NO_ACTION;
             }
 
@@ -365,7 +364,7 @@ namespace Carendes
                     else
                     {
                         // Check if there is a difference in RX line
-                        if(_rxRead())
+                        if(_rxPin->GetValue())
                         {
                             // Edge detected - set state to RECEIVING
                             _dali_state = RECEIVING_DATA;
@@ -412,7 +411,7 @@ namespace Carendes
             unsigned char i;
 
             //set output pin to 0
-            _txClear();
+            _txPin->Clear();
 
             _tick_count = 0;
             _bit_count  = 0;

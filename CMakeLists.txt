@@ -22,7 +22,15 @@ foreach(hdr IN LISTS LIB_INCLUDES)
 endforeach()
 list(REMOVE_DUPLICATES LIB_INCLUDE_DIRS)
 
-include(cpm/CPM.cmake)
+message("Downloading CPM Package Manager")
+file(
+        DOWNLOAD
+        https://github.com/cpm-cmake/CPM.cmake/releases/download/v0.42.3/CPM.cmake
+        ${CMAKE_CURRENT_BINARY_DIR}/CPM.cmake
+)
+include("${CMAKE_CURRENT_BINARY_DIR}/CPM.cmake")
+
+CPMAddPackage("gh:JeroenVandezande/LowLevelCPPClasses@3.6.1")
 
 target_link_libraries(${PROJECT_NAME} PUBLIC microlog LowLevelEmbedded)
 
