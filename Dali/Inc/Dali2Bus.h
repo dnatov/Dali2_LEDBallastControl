@@ -37,7 +37,6 @@ namespace Carendes::Dali
         volatile unsigned char _expected_response = false;
         LowLevelEmbedded::IOPIN* _txPin;
         LowLevelEmbedded::IOPIN* _rxPin;
-        DelayMsFn _delayMs = nullptr;
         uint8_t finishTransfer();
         void init();
         void timer_Init();
@@ -52,11 +51,9 @@ namespace Carendes::Dali
     protected:
     public:
         Dali2Bus(LowLevelEmbedded::IOPIN* txPin,
-                 LowLevelEmbedded::IOPIN* rxPin,
-                 DelayMsFn delayMs)
+                 LowLevelEmbedded::IOPIN* rxPin)
         : _txPin(txPin),
-          _rxPin(rxPin),
-          _delayMs(delayMs)
+          _rxPin(rxPin)
         {
             init();
         }

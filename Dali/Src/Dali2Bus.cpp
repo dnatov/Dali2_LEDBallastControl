@@ -5,6 +5,7 @@
 #include "Dali-defs.h"
 #include "Dali2Bus.h"
 #include "ESUM-230S500BG-Defs.h"
+#include "Delay.h"
 
 namespace Carendes
 {
@@ -270,7 +271,7 @@ namespace Carendes
                 if(_expect_backchannel == TRUE)
                 {
                     // A small delay to allow slave device to prepare
-                    if (_delayMs) { _delayMs(1); }
+                    LowLevelEmbedded::Utility::Delay_ms(1);
                     mStartTimer();
                     _dali_state = WAIT_FOR_BACKCHANNEL_TO_RECEIVE;
                 }
@@ -278,7 +279,7 @@ namespace Carendes
                 {
                     // No backchannel expected, go to settling state
                     _dali_state = SETTLING_FF_TO_FF;
-                    if (_delayMs) { _delayMs(10); }
+                    LowLevelEmbedded::Utility::Delay_ms(10);
                     // Could add a timer to transition to NO_ACTION after settling time
                     // For now, just transition directly
                     _dali_state = NO_ACTION;
