@@ -151,6 +151,49 @@ namespace Carendes::Dali
         return SendCommand(STORE_ACTUAL_LEVEL_IN_THE_DTR);
     }
 
+    bool Dali2Device::TryChangeShortAddress(uint8_t newShortAddress)
+    {
+        if (_addressMode != DaliAddressMode::Short || newShortAddress > ADDRESS64)
+            return false;
+
+        if (_shortAddressChangeStep == ShortAddressChangeStep::None && newShortAddress == _address)
+            return true;
+
+        if (_shortAddressChangeStep == ShortAddressChangeStep::None)
+        {
+            _pendingShortAddress = newShortAddress;
+            _shortAddressChangeStep = ShortAddressChangeStep::SetDtr;
+        }
+
+        if (_pendingShortAddress != newShortAddress || !Bus().IsIdle())
+            return false;
+
+        if (_shortAddressChangeStep == ShortAddressChangeStep::SetDtr)
+        {
+            const auto encodedShortAddress = static_cast<uint8_t>((newShortAddress << 1) | 0x01);
+
+            if (!SetDataTransferRegister(encodedShortAddress))
+                return false;
+
+            _shortAddressChangeStep = ShortAddressChangeStep::StoreShortAddress;
+            return false;
+        }
+
+        if (_shortAddressChangeStep == ShortAddressChangeStep::StoreShortAddress)
+        {
+            if (!SendCommand(STORE_DTR_AS_SHORT_ADDRESS))
+                return false;
+
+            _shortAddressChangeStep = ShortAddressChangeStep::WaitUntilStored;
+            return false;
+        }
+
+        _address = _pendingShortAddress;
+        _pendingShortAddress = 0;
+        _shortAddressChangeStep = ShortAddressChangeStep::None;
+        return true;
+    }
+
     unsigned char Dali2Device::StoreDtrAsMaxLevel()
     {
         return SendCommand(STORE_THE_DTR_AS_MAX_LEVEL);

@@ -29,6 +29,17 @@ namespace Carendes::Dali
         uint8_t _address;
         DaliAddressMode _addressMode;
 
+        enum class ShortAddressChangeStep : uint8_t
+        {
+            None,
+            SetDtr,
+            StoreShortAddress,
+            WaitUntilStored
+        };
+
+        ShortAddressChangeStep _shortAddressChangeStep = ShortAddressChangeStep::None;
+        uint8_t _pendingShortAddress = 0;
+
         [[nodiscard]] uint8_t commandAddress() const;
         [[nodiscard]] uint8_t directArcAddress() const;
         [[nodiscard]] uint8_t commandAddressType() const;
@@ -61,6 +72,7 @@ namespace Carendes::Dali
         unsigned char SetDataTransferRegister(uint8_t value);
         unsigned char SetDataTransferRegister1(uint8_t value);
         unsigned char StoreActualLevelInDtr();
+        bool TryChangeShortAddress(uint8_t newShortAddress);
         unsigned char StoreDtrAsMaxLevel();
         unsigned char StoreDtrAsMinLevel();
         unsigned char StoreDtrAsPowerOnLevel();
