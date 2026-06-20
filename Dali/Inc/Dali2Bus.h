@@ -59,10 +59,10 @@ namespace Carendes::Dali
             init();
         }
 
-        void StartDataQuery(uint8_t address, uint8_t requestedData);
-        void StartDiagnosticDataQuery(uint8_t address, uint8_t requestedData);
-
         unsigned char FetchDaliData();
+        unsigned char Status() const;
+        bool IsIdle() const;
+        bool HasReceivedData() const;
 
         // Stick this in your main loop to process the Dali State Machine
         void mDoWorkInMainLoop();

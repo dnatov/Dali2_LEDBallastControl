@@ -14,6 +14,26 @@ This repository contains code for operating an **Inventronics LED Ballast (ESUM-
 6. Receive DALI data by running FetchDaliData()
 7. Repeat address commands for subsequent bytes.
 
+The library is split into a master bus and device wrappers:
+
+- `Carendes::Dali::Dali2Bus` owns the DALI master state machine, timer integration, Manchester encoding, and raw command transfer.
+- `Carendes::Dali::Dali2Device` wraps common DALI control gear commands for one short address, group, or broadcast target.
+- `Carendes::Dali::ESUM230S500BGBallast` extends `Dali2Device` with the ESUM diagnostic-bank access frames.
+
+Example ESUM diagnostic read sequence:
+
+```cpp
+using namespace Carendes::Dali;
+
+ESUM230S500BGBallast ballast(daliBus, ADDRESS01);
+
+float acVoltage = 0.0f;
+if (ballast.TryGetAcVoltage(acVoltage))
+{
+    // acVoltage is ready.
+}
+```
+
 ---
 
 ## 🧰 Hardware Used

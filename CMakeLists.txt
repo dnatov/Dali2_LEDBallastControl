@@ -11,7 +11,11 @@ add_library(${PROJECT_NAME} ${LIB_INCLUDES} ${LIB_SOURCES}
         Dali/Inc/Dali-defs.h
         Dali/Inc/ESUM-230S500BG-Defs.h
         Dali/Inc/Dali2Bus.h
+        Dali/Inc/Dali2Device.h
+        Dali/Inc/ESUM230S500BGBallast.h
         Dali/Src/Dali2Bus.cpp
+        Dali/Src/Dali2Device.cpp
+        Dali/Src/ESUM230S500BGBallast.cpp
 )
 
 # Collect and de-duplicate parent directories

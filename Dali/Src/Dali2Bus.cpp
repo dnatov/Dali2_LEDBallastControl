@@ -4,7 +4,6 @@
 
 #include "Dali-defs.h"
 #include "Dali2Bus.h"
-#include "ESUM-230S500BG-Defs.h"
 #include "Delay.h"
 
 namespace Carendes
@@ -247,6 +246,21 @@ namespace Carendes
 
             //return received byte
             return receivedData;
+        }
+
+        unsigned char Dali2Bus::Status() const
+        {
+            return _dali_state;
+        }
+
+        bool Dali2Bus::IsIdle() const
+        {
+            return _dali_state == NO_ACTION;
+        }
+
+        bool Dali2Bus::HasReceivedData() const
+        {
+            return _dali_state == BACKWARD_FRAME_RECEIVED;
         }
 
         unsigned char Dali2Bus::DALI_Master_Status()

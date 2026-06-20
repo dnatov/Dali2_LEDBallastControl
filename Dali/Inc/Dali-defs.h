@@ -395,6 +395,7 @@
 #define TERMINATE_L_BITS                           0x00    //1010 0001 0000 0000
 
 #define DTR                                        0xA3    //1010 0011 XXXX XXXX
+#define REG_DTR1                                   0xC3    //1100 0011 XXXX XXXX
 
 #define INITIALISE                                 0xA5    //1010 0101 XXXX XXXX
 
